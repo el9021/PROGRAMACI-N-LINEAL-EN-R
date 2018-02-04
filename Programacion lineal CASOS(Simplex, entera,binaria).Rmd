@@ -1,0 +1,229 @@
+---
+title: "GESTION DE OPERACIONES"
+subtitle: "Metodo Simplex- PL Entera - PL Binaria"
+author: "Elvis Cornejo Ramos"
+date: "20 de enero de 2018"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+#SOLUCION PL: Metodo Sinplex - Sin Restricciones #
+
+Una empresa tiene en el alamacen las siguientes disponibilidades : 14 toneladas de la materia A , 8 toneladas de la materia B   y 30 toneladas de la materia C. La fabrica produce los articulos  "X" e "Y" el producto  "X" requiere 1 tonelada de  "A",  1 tonelada de "B" Y 5 toneladas de "C". El producto "Y" requiere 2 toneladas de "A", 1 tonelada de "B"  y 3 toneladas de "C" **por unidad** . si se venden a 25 y 30  dolares cada unidad de "X" e "Y" respectivamente.
+
+
+1. Formular el modelo de  programacion lineal que optimice las ventas.
+
+2. Cual sera la combinacion de productos que se debe vender,
+
+3. cual sera el ingreso optimo.
+
+4. Cuantas toneladas  de las materias  "A", "B","C" se necesitan para optimizar las ventas.
+
+##SOLUCION
+
+1. Definir las variables
+
++ *Z= Ventas Totales*
++ *X_1=numero de unidades del producto "X"*
++ *X_2=numero de unidades del producto "Y"*
+
+2.Elaboramos el modelo
+
++ $Z=25X_1+30X_2$
+
+
+### s.a:
+
+- $1X_1+2X_2 =< 14$
+
+- $1X_1+1X_2=< 8$
+
+- $5X_1+3X_2=< 30$
+
+- $X_1,X_2=> 0$
+
+
+3. Creamos un vevestor para "Z"
+
+
+```{r}
+ z <- c(25,30)
+```
+
+
+4. Creamos  una matriz  con todos los elementos de las inecuaciones que estan en la 
+parte hizquierda, esta matriz la anidaremos en un vector llamado "a"
+
+
+```{r}
+a <- matrix(c(1,1,5,2,1,3), ncol = 2)
+print(a)
+```
+
+
+4. Acontinuacion creamos un vector  para los elementos del lado derecho del sistema de inecuaciones, al que lo denominaremos "b"
+
+
+```{r}
+b <- c(14,8,30)
+print(b)
+```
+
+5. Acontinuacion utilizaremos la funcion **rep** para indicar las desigualdades, esta funcion la alojaremos en un vector que llamaremos **necu** (los nombres de  los vectores a priori)
+
+
+```{r}
+necu <- rep("<=",3)
+print(necu)
+```
+
+
+5.Utilizamos la funcion **solveLP** que proviene del paquete del mismo nombre. En esta funcion, colocaremos todos los vectores creados anteriormente (**solveLP(solucion <- solveLP(z,b,a,maximum = TRUE,necu))**) , con el atributo *maximum= TRUE* le estamos indicando que queremos maximizar la funcion, la cual guardamos en un vector llamado **solucion**
+
+```{r }
+library(linprog)
+solucion <- solveLP(z,b,a,maximum = TRUE,necu)
+summary(solucion)
+```
+
+
+
+Como podemos observar  la funcion  utilizada nos indica que el punto optimo es $X_1=2,X_2=6$  con la convinacion de estas dos cantidades optendremos in ingreso maximo de **$230**. 
+6.Para  saber cuanto de "A","B","C"  utilizaremos creamos el vector **solucion1**, que contiene los mismos elementos del vector **solucion** pero ahora le hemos añadido el atributo **solucion1 <- solveLP(z,b,a,maximum = TRUE,necu, verbose = 4)**
+```{r}
+library(linprog)
+solucion1 <- solveLP(z,b,a,maximum = TRUE,necu, verbose = 4)
+print(solucion1)
+```
+Como se puede observar en el cuadro de restricciones **constraints**  se puede observar  el requerimien de materias primas es $A=14,B=8,C=28$ Toneladas, tambien podemos observar que la materia prima **C** Tiene una olgura de **2** 
+
+
+#SOLUCION PL: Variables Binarias #
+Este caso se  presenta  en situaciones en que la linealidad del modelo se hace muy dificil sostener  con un conjunto de variables continuas como unica herramienta de modelacion. Es asi que surgen las variables binarias (aquellas que solo toman valores de 1 y 0)
+
+## Situciones frecientes que pueden modelarse con variables Binarias##
+
+1. Produccion acotada: se produce un producto o no.
+2. Produccion acotada inferiormente
+3. Costo Fijo
+4. Variables que toman un conjunto de valores
+5. Restricciones excluyentes
+6. max -max
+
+##EJEMPLO##
+
+$MinZ=5X_1+7X_2 + 10X_3 +3X_4+X_5$
+
+$S.a: -1X_1+3X_2+5X_3-X_4 \leq4$
+
+$2X_1-6X_2+3X_3+2X_4-2X_5 \leq 0$
+
+$X_2-2X_3+X_4+X_5\geq1$
+
+$X_i={0,1} \:i=1,2,3,4,5$
+
+**Para resolver este ejercicio**
+
+1.crear un vector conformado por los coeficientes de la funcion a optimizar.
+
+```{r}
+ z3 = c(5,7,10,3,1)
+print(z3)
+
+```
+
+
+2.Creamos una matriz  con los coeficientes de la parte derecha de las restricciones.
+
+```{r}
+matd = matrix(c(-1,3,5,-1,4,2,-6,3,2,-2,0,1,-2,1,1),byrow = TRUE, nrow = 3)
+print(matd)
+```
+
+
+3. creamos un vector que contenga la direccion de las desigualadades
+
+```{r}
+dir3 = c("<=","<=",">=")
+
+```
+
+
+4. Creamos otro vector para la parte derecha de las restricciones
+
+```{r}
+res3 = c(4,0,1)
+```
+
+
+5. Utilizamos la funcion $lp$ para  la resolucion del modelo, la cual estara contenida en el vector **solucion_binaria**
+
+```{r}
+solucion_binaria = lp(direction = "min", z3,matd,dir3,res3,all.bin = TRUE)
+print(solucion_binaria)
+
+```
+
+
+6. Por ultimo visualizamos los valires de las $X_1,X_2,X_3,X_4,X_5$ con la siguente funcion
+```{r}
+valores = solucion_binaria$solution
+print(valores)
+```
+
+
+##SOLICIONPL: VARIABLES ENTERAS##
+
+ La resolucion de  este tipo de problemas es similar al del problema anterior, solo que para este caso utilizaremos el atributo $all.int$ 
+  
+  **Ejemplo:**
+  
+  $MaxZ=5X_1 + 7X_2$
+  
+  $2X_1 +X_2\leq8$
+  
+  $2X_1 +5X_2 \leq20$
+  
+  $X_1,X_2 \geq 0  - enteros$
+  
+  **Para resolver este ejercicio**
+  
+  1. Creamos un vector con los coeficientes de la funcion objetivo.
+  
+```{r}
+ z2 = c(5,7)
+
+```
+  
+  2. Creamos una matriz con la parte izquierda de las restricciones.
+```{r}
+ matc= matrix(c(2,2,1,5), byrow = FALSE,ncol = 2)
+print(matc)
+```
+  
+ 
+  3. Creamos un vector para las recriciones.
+```{r}
+res2 = c(8,20)
+```
+  
+4. Creamos otro vector para determinar la orientacion de las desigualdades.
+```{r}
+dir2 = c("<=", "<=")
+```
+
+5. Utilizamos la funcion $lp$ la cual estara contenida en el vector **Solucion entera 2**. pero a diferencia del ejercio anterior utilizaremos el atributo $all.int$
+
+```{r}
+ solucion_entera2 = lp(direction = "max",z2, matc , dir2 , res2 , all.int = TRUE)
+print(solucion_entera2)
+```
+
+6. Por ultimo visualizamos los valores de $x_1,x_2$.
+
+```{r}
+ solucion_entera2$solution
+```
+
